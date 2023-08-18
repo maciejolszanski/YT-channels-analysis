@@ -1,5 +1,8 @@
 \__pycache__
 
-# airflow logs and env vars
+# Aairflow logs and env vars
 \logs
 .env
+
+# Directory with my local experiments
+\local_experiments
