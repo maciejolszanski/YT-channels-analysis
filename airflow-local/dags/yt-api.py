@@ -1,6 +1,5 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator, BranchPythonOperator
-from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.microsoft.azure.transfers.local_to_wasb import LocalFilesystemToWasbOperator
 from airflow.models import Variable
 
@@ -9,13 +8,10 @@ from airflow.hooks.base_hook import BaseHook
 from datetime import datetime
 import os
 import json
-import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 
-# scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
-
-
+CHANNELS_TO_SEARCH = 'data engineering'
 
 
 def _extract_channels():
@@ -33,7 +29,7 @@ def _extract_channels():
     request = youtube.search().list(
         part="snippet",
         maxResults=200,
-        q='data engineering',
+        q=CHANNELS_TO_SEARCH,
         type='channel'
     )
     response = request.execute()
@@ -58,12 +54,13 @@ with DAG(
 
     # Get connection to Azure Blob Storage defined in Airflow UI
     conn = BaseHook.get_connection('azure-sa')
+    blob_name = f"channels-{CHANNELS_TO_SEARCH}-{datetime.now().strftime('%Y-%m-%d')}.json"
 
     save_channels = LocalFilesystemToWasbOperator(
         task_id="upload_file_to_Azure_Blob",
         file_path="channels_info.json",
         container_name="mol/yt-data",
-        blob_name=f"channels-info-{datetime.now().strftime('%Y-%m-%d')}.json",
+        blob_name=blob_name,
         wasb_conn_id=conn.conn_id
     )
 
