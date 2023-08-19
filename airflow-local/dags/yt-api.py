@@ -103,7 +103,9 @@ def _extract_videos_data(task_instance):
     for i in range(int(len(video_ids)/50)+1):
 
         video_ids_slice = video_ids[50*i:50*(i+1)]
-         
+        # This never happens, but to be more than 100% sure
+        assert(len(video_ids_slice)> 0)
+
         youtube = _create_youtube_object()
 
         request = youtube.videos().list(
@@ -111,6 +113,7 @@ def _extract_videos_data(task_instance):
             id=video_ids_slice
         )
         videos_data = request.execute()
+        
         if i == 0: 
             output_videos_dict = videos_data
         else:
