@@ -93,7 +93,6 @@ def _extract_videos_data(task_instance):
     full_channels_data = task_instance.xcom_pull(task_ids='get_channels_data')
     channels_data = full_channels_data['items']
     video_ids = _get_video_ids(channels_data)
-    video_ids_string = ','.join(video_ids)
 
     output_videos_dict = {}
     
@@ -113,7 +112,7 @@ def _extract_videos_data(task_instance):
             id=video_ids_slice
         )
         videos_data = request.execute()
-        
+
         if i == 0: 
             output_videos_dict = videos_data
         else:
