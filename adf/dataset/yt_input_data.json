@@ -1,0 +1,121 @@
+{
+	"name": "yt_input_data",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "mol_yt_data",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"data_type": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": {
+					"value": "@concat('yt-data/', dataset().data_type)",
+					"type": "Expression"
+				},
+				"container": "mol"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"kind": {
+					"type": "string"
+				},
+				"etag": {
+					"type": "string"
+				},
+				"pageInfo": {
+					"type": "object",
+					"properties": {
+						"totalResults": {
+							"type": "integer"
+						},
+						"resultsPerPage": {
+							"type": "integer"
+						}
+					}
+				},
+				"items": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"kind": {
+								"type": "string"
+							},
+							"etag": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							},
+							"contentDetails": {
+								"type": "object",
+								"properties": {
+									"relatedPlaylists": {
+										"type": "object",
+										"properties": {
+											"likes": {
+												"type": "string"
+											},
+											"uploads": {
+												"type": "string"
+											}
+										}
+									}
+								}
+							},
+							"statistics": {
+								"type": "object",
+								"properties": {
+									"viewCount": {
+										"type": "string"
+									},
+									"subscriberCount": {
+										"type": "string"
+									},
+									"hiddenSubscriberCount": {
+										"type": "boolean"
+									},
+									"videoCount": {
+										"type": "string"
+									}
+								}
+							},
+							"topicDetails": {
+								"type": "object",
+								"properties": {
+									"topicIds": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
+									},
+									"topicCategories": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"nextPageToken": {
+					"type": "string"
+				},
+				"regionCode": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}
