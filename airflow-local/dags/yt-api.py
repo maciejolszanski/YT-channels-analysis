@@ -103,11 +103,7 @@ def _extract_videos_data(task_instance):
     for i in range(int(len(video_ids)/50)+1):
 
         video_ids_slice = video_ids[50*i:50*(i+1)]
-        print(f"Slice length: {len(video_ids_slice)}")
-        if len(video_ids_slice) < 1:
-            print(f"For loop broken due to empty slice")
-            break
-            
+         
         youtube = _create_youtube_object()
 
         request = youtube.videos().list(
