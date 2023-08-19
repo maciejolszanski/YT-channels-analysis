@@ -1,0 +1,9 @@
+{
+	"name": "AzureDataSandboxADF",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "85c93578-7977-4110-b7b1-71f425c99467",
+		"tenantId": "f2f5be1f-3cd2-4cf0-bd69-19060afec07c"
+	}
+}
