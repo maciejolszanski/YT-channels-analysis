@@ -78,7 +78,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"filename": {
-											"value": "@join(take(split(item().name, '-'), 6), '-')",
+											"value": "@concat(join(take(split(item().name, '-'), 6), '-'),'.json')",
 											"type": "Expression"
 										}
 									}
