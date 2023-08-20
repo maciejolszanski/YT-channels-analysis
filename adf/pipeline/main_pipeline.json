@@ -1,5 +1,5 @@
 {
-	"name": "pipeline1",
+	"name": "main_pipeline",
 	"properties": {
 		"activities": [
 			{
@@ -49,8 +49,26 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "For_each_dataname",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.data_names",
+						"type": "Expression"
+					}
+				}
 			}
 		],
+		"parameters": {
+			"data_names": {
+				"type": "array",
+				"defaultValue": "['search', 'channels', 'videos']"
+			}
+		},
 		"annotations": []
 	}
 }
