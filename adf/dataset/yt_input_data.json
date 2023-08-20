@@ -15,6 +15,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
+				"folderPath": {
+					"value": "@concat('yt-data/', dataset().data_type)",
+					"type": "Expression"
+				},
 				"container": "mol"
 			}
 		},
