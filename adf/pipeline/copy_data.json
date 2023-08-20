@@ -3,47 +3,11 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Find_files_in_directory",
-				"type": "Lookup",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "JsonSource",
-						"storeSettings": {
-							"type": "AzureBlobStorageReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "JsonReadSettings"
-						}
-					},
-					"dataset": {
-						"referenceName": "yt_input_data",
-						"type": "DatasetReference",
-						"parameters": {
-							"data_type": {
-								"value": "@pipeline().parameters.data_name",
-								"type": "Expression"
-							}
-						}
-					}
-				}
-			},
-			{
 				"name": "Copy_each_file",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Find_files_in_directory",
+						"activity": "Get Input FileNames",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -52,14 +16,21 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Find_files_in_directory').output",
+						"value": "@activity('Get Input FileNames').output.childItems",
 						"type": "Expression"
 					},
 					"activities": [
 						{
 							"name": "Copy_yt_data",
 							"type": "Copy",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Create output FileName",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -74,11 +45,7 @@
 									"storeSettings": {
 										"type": "AzureBlobStorageReadSettings",
 										"recursive": true,
-										"enablePartitionDiscovery": false,
-										"prefix": {
-											"value": "@{pipeline().parameters.data_name}",
-											"type": "Expression"
-										}
+										"enablePartitionDiscovery": false
 									},
 									"formatSettings": {
 										"type": "JsonReadSettings"
@@ -97,11 +64,15 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "yt_input_data",
+									"referenceName": "yt_input_file",
 									"type": "DatasetReference",
 									"parameters": {
-										"data_type": {
+										"directory": {
 											"value": "@pipeline().parameters.data_name",
+											"type": "Expression"
+										},
+										"filename": {
+											"value": "@item().name",
 											"type": "Expression"
 										}
 									}
@@ -112,21 +83,81 @@
 									"referenceName": "yt_output_data",
 									"type": "DatasetReference",
 									"parameters": {
-										"data_type": {
-											"value": "@pipeline().parameters.data_name",
+										"filename": {
+											"value": "@variables('output_filename')",
 											"type": "Expression"
 										}
 									}
 								}
 							]
+						},
+						{
+							"name": "Create output FileName",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "output_filename",
+								"value": {
+									"value": "@join(take(split(item().name, '-'), 6), '-')",
+									"type": "Expression"
+								}
+							}
 						}
 					]
+				}
+			},
+			{
+				"name": "Get Input FileNames",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "yt_input_directory",
+						"type": "DatasetReference",
+						"parameters": {
+							"directory": {
+								"value": "@pipeline().parameters.data_name",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "JsonReadSettings"
+					}
 				}
 			}
 		],
 		"parameters": {
 			"data_name": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"filename_array": {
+				"type": "Array"
+			},
+			"output_filename": {
+				"type": "String"
 			}
 		},
 		"annotations": []
