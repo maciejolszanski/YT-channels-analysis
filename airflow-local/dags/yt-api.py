@@ -40,7 +40,7 @@ def _extract_search_data():
     )
     search_results = request.execute()
 
-    with open("search-results.json", 'w') as f:
+    with open("search.json", 'w') as f:
         json.dump(search_results, f, indent=4)
 
     return search_results
@@ -158,8 +158,8 @@ with DAG(
 
     save_search_data = LocalFilesystemToWasbOperator(
         task_id="upload_search_data_to_Azure_Blob",
-        file_path="search-results.json",
-        container_name="mol/yt-data/search-results",
+        file_path="search.json",
+        container_name="mol/yt-data/search",
         blob_name=search_blob_name,
         wasb_conn_id=conn.conn_id
     )
