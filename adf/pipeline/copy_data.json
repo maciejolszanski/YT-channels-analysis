@@ -19,18 +19,12 @@
 						"value": "@activity('Get Input FileNames').output.childItems",
 						"type": "Expression"
 					},
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "Copy_yt_data",
 							"type": "Copy",
-							"dependsOn": [
-								{
-									"activity": "Create output FileName",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -84,29 +78,12 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"filename": {
-											"value": "@variables('output_filename')",
+											"value": "@join(take(split(item().name, '-'), 6), '-')",
 											"type": "Expression"
 										}
 									}
 								}
 							]
-						},
-						{
-							"name": "Create output FileName",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "output_filename",
-								"value": {
-									"value": "@join(take(split(item().name, '-'), 6), '-')",
-									"type": "Expression"
-								}
-							}
 						}
 					]
 				}
@@ -150,14 +127,6 @@
 		"parameters": {
 			"directory": {
 				"type": "string"
-			}
-		},
-		"variables": {
-			"filename_array": {
-				"type": "Array"
-			},
-			"output_filename": {
-				"type": "String"
 			}
 		},
 		"annotations": []
