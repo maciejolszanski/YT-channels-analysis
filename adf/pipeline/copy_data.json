@@ -68,7 +68,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"directory": {
-											"value": "@pipeline().parameters.data_name",
+											"value": "@pipeline().parameters.directory",
 											"type": "Expression"
 										},
 										"filename": {
@@ -129,7 +129,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"directory": {
-								"value": "@pipeline().parameters.data_name",
+								"value": "@pipeline().parameters.directory",
 								"type": "Expression"
 							}
 						}
@@ -148,7 +148,7 @@
 			}
 		],
 		"parameters": {
-			"data_name": {
+			"directory": {
 				"type": "string"
 			}
 		},
