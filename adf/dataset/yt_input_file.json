@@ -1,12 +1,15 @@
 {
-	"name": "yt_input_data",
+	"name": "yt_input_file",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "mol_yt_data",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"data_type": {
+			"directory": {
+				"type": "string"
+			},
+			"filename": {
 				"type": "string"
 			}
 		},
@@ -15,8 +18,12 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().filename",
+					"type": "Expression"
+				},
 				"folderPath": {
-					"value": "@concat('yt-data/', dataset().data_type)",
+					"value": "@concat('yt-data/', dataset().directory)",
 					"type": "Expression"
 				},
 				"container": "mol"
