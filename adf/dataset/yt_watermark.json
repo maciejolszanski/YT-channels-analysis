@@ -1,0 +1,33 @@
+{
+	"name": "yt_watermark",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "mol_yt_data",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "watermark.json",
+				"folderPath": "yt-data",
+				"container": "mol"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"search_watermark": {
+					"type": "string"
+				},
+				"channels_watermark": {
+					"type": "string"
+				},
+				"videos_watermark": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}
