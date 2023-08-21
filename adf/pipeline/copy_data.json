@@ -343,7 +343,6 @@
 					},
 					"traceLevel": "Fine"
 				}
-
 			}
 		],
 		"parameters": {
@@ -360,15 +359,6 @@
 			},
 			"files_to_copy": {
 				"type": "Array"
-			},
-			"current_item": {
-				"type": "String"
-			},
-			"dates": {
-				"type": "Array"
-			},
-			"temp": {
-				"type": "String"
 			}
 		},
 		"annotations": []
