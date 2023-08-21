@@ -1,0 +1,32 @@
+{
+	"name": "new_blob_yt_data",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "main_pipeline",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"directories": [
+						"search",
+						"channels",
+						"videos"
+					]
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/mol/blobs/yt-data",
+			"blobPathEndsWith": ".json",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/cb3c9618-9649-4894-ad33-6f2401835a41/resourceGroups/AzureDataSandbox/providers/Microsoft.Storage/storageAccounts/azuredatasandboxadls",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
