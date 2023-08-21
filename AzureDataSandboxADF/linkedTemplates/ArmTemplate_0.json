@@ -1,0 +1,1088 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nazwa fabryki danych",
+			"defaultValue": "AzureDataSandboxADF"
+		},
+		"mol_yt_data_connectionString": {
+			"type": "secureString",
+			"metadata": "Bezpieczny ciąg dla elementu „connectionString” — „mol_yt_data”"
+		},
+		"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
+			"type": "array",
+			"defaultValue": [
+				"search",
+				"channels",
+				"videos"
+			]
+		},
+		"new_blob_yt_data_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/cb3c9618-9649-4894-ad33-6f2401835a41/resourceGroups/AzureDataSandbox/providers/Microsoft.Storage/storageAccounts/azuredatasandboxadls"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/integrationRuntime1')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "West Europe",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": false
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/mol_yt_data')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('mol_yt_data_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "integrationRuntime1",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0,
+							"cleanup": true
+						},
+						"pipelineExternalComputeScaleProperties": {
+							"timeToLive": 60
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/yt_input_directory')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "mol_yt_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": {
+							"value": "@concat('yt-data/', dataset().directory)",
+							"type": "Expression"
+						},
+						"container": "mol"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"kind": {
+							"type": "string"
+						},
+						"etag": {
+							"type": "string"
+						},
+						"pageInfo": {
+							"type": "object",
+							"properties": {
+								"totalResults": {
+									"type": "integer"
+								},
+								"resultsPerPage": {
+									"type": "integer"
+								}
+							}
+						},
+						"items": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"kind": {
+										"type": "string"
+									},
+									"etag": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									},
+									"contentDetails": {
+										"type": "object",
+										"properties": {
+											"relatedPlaylists": {
+												"type": "object",
+												"properties": {
+													"likes": {
+														"type": "string"
+													},
+													"uploads": {
+														"type": "string"
+													}
+												}
+											}
+										}
+									},
+									"statistics": {
+										"type": "object",
+										"properties": {
+											"viewCount": {
+												"type": "string"
+											},
+											"subscriberCount": {
+												"type": "string"
+											},
+											"hiddenSubscriberCount": {
+												"type": "boolean"
+											},
+											"videoCount": {
+												"type": "string"
+											}
+										}
+									},
+									"topicDetails": {
+										"type": "object",
+										"properties": {
+											"topicIds": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												}
+											},
+											"topicCategories": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"nextPageToken": {
+							"type": "string"
+						},
+						"regionCode": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/mol_yt_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/yt_input_file')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "mol_yt_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().filename",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('yt-data/', dataset().directory)",
+							"type": "Expression"
+						},
+						"container": "mol"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"kind": {
+							"type": "string"
+						},
+						"etag": {
+							"type": "string"
+						},
+						"pageInfo": {
+							"type": "object",
+							"properties": {
+								"totalResults": {
+									"type": "integer"
+								},
+								"resultsPerPage": {
+									"type": "integer"
+								}
+							}
+						},
+						"items": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"kind": {
+										"type": "string"
+									},
+									"etag": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									},
+									"contentDetails": {
+										"type": "object",
+										"properties": {
+											"relatedPlaylists": {
+												"type": "object",
+												"properties": {
+													"likes": {
+														"type": "string"
+													},
+													"uploads": {
+														"type": "string"
+													}
+												}
+											}
+										}
+									},
+									"statistics": {
+										"type": "object",
+										"properties": {
+											"viewCount": {
+												"type": "string"
+											},
+											"subscriberCount": {
+												"type": "string"
+											},
+											"hiddenSubscriberCount": {
+												"type": "boolean"
+											},
+											"videoCount": {
+												"type": "string"
+											}
+										}
+									},
+									"topicDetails": {
+										"type": "object",
+										"properties": {
+											"topicIds": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												}
+											},
+											"topicCategories": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"nextPageToken": {
+							"type": "string"
+						},
+						"regionCode": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/mol_yt_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/yt_output_data')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "mol_yt_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"filename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().filename",
+							"type": "Expression"
+						},
+						"folderPath": "yt-analysis-data/bronze",
+						"container": "mol"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"kind": {
+							"type": "string"
+						},
+						"etag": {
+							"type": "string"
+						},
+						"pageInfo": {
+							"type": "object",
+							"properties": {
+								"totalResults": {
+									"type": "integer"
+								},
+								"resultsPerPage": {
+									"type": "integer"
+								}
+							}
+						},
+						"items": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"kind": {
+										"type": "string"
+									},
+									"etag": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									},
+									"contentDetails": {
+										"type": "object",
+										"properties": {
+											"relatedPlaylists": {
+												"type": "object",
+												"properties": {
+													"likes": {
+														"type": "string"
+													},
+													"uploads": {
+														"type": "string"
+													}
+												}
+											}
+										}
+									},
+									"statistics": {
+										"type": "object",
+										"properties": {
+											"viewCount": {
+												"type": "string"
+											},
+											"subscriberCount": {
+												"type": "string"
+											},
+											"hiddenSubscriberCount": {
+												"type": "boolean"
+											},
+											"videoCount": {
+												"type": "string"
+											}
+										}
+									},
+									"topicDetails": {
+										"type": "object",
+										"properties": {
+											"topicIds": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												}
+											},
+											"topicCategories": {
+												"type": "array",
+												"items": {
+													"type": "string"
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"nextPageToken": {
+							"type": "string"
+						},
+						"regionCode": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/mol_yt_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/yt_watermark')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "mol_yt_data",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "watermark.json",
+						"folderPath": {
+							"value": "@concat('yt-data/', dataset().directory)",
+							"type": "Expression"
+						},
+						"container": "mol"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"watermark": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/mol_yt_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Update_watermark')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "yt_watermark",
+								"type": "DatasetReference"
+							},
+							"name": "LoadOldWatermark"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "yt_watermark",
+								"type": "DatasetReference"
+							},
+							"name": "SaveNewWatermark"
+						}
+					],
+					"transformations": [
+						{
+							"name": "UpdateWatermark"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     new_watermark as string",
+						"}",
+						"source(output(",
+						"          watermark as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'singleDocument') ~> LoadOldWatermark",
+						"LoadOldWatermark derive(watermark = $new_watermark) ~> UpdateWatermark",
+						"UpdateWatermark sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          watermark as string",
+						"     ),",
+						"     partitionFileNames:['watermark.json'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SaveNewWatermark"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/yt_watermark')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/copy_data')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy Files",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get FileNames To Copy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('files_to_copy')",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Copy YT data",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"sink": {
+											"type": "JsonSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "JsonWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "yt_input_file",
+											"type": "DatasetReference",
+											"parameters": {
+												"directory": {
+													"value": "@pipeline().parameters.directory",
+													"type": "Expression"
+												},
+												"filename": {
+													"value": "@item()",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "yt_output_data",
+											"type": "DatasetReference",
+											"parameters": {
+												"filename": {
+													"value": "@concat(join(take(split(item(), '-'), 6), '-'),'.json')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Get Input FileNames",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "yt_input_directory",
+								"type": "DatasetReference",
+								"parameters": {
+									"directory": {
+										"value": "@pipeline().parameters.directory",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "JsonReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Lookup Old Watermark",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "yt_watermark",
+								"type": "DatasetReference",
+								"parameters": {
+									"directory": {
+										"value": "@pipeline().parameters.directory",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					{
+						"name": "Set Old Watermark",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup Old Watermark",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "old_watermark",
+							"value": {
+								"value": "@activity('Lookup Old Watermark').output.firstRow.watermark",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Get FileNames To Copy",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Input FileNames",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set Old Watermark",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Input FileNames').output.childItems",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "If Later Than Old Watermark",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@if(greater(length(split(item().name, '-')), 2),\ngreater(ticks(formatDateTime(join(take(skip(split(item().name, '-'), 3), 3), '-'), 'yyyy-MM-dd')), ticks(formatDateTime(variables('old_watermark'), 'yyyy-MM-dd'))),\nbool(0)\n)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Append Files To Copy",
+												"type": "AppendVariable",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "files_to_copy",
+													"value": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								},
+								{
+									"name": "If Later Than New Watermark",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@if(greater(length(split(item().name, '-')), 2),\ngreater(ticks(formatDateTime(join(take(skip(split(item().name, '-'), 3), 3), '-'), 'yyyy-MM-dd')), ticks(formatDateTime(variables('new_watermark'), 'yyyy-MM-dd'))),\nbool(0)\n)",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Set New Watermark",
+												"type": "SetVariable",
+												"dependsOn": [],
+												"policy": {
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"variableName": "new_watermark",
+													"value": {
+														"value": "@formatDateTime(join(take(skip(split(item().name, '-'), 3), 3), '-'), 'yyyy-MM-dd')\n\n",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Init New Watermark",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup Old Watermark",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "new_watermark",
+							"value": {
+								"value": "@activity('Lookup Old Watermark').output.firstRow.watermark",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Update watermark",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Copy Files",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Update_watermark",
+								"type": "DataFlowReference",
+								"parameters": {
+									"new_watermark": {
+										"value": "'@{variables('new_watermark')}'",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"LoadOldWatermark": {
+										"directory": {
+											"value": "@pipeline().parameters.directory",
+											"type": "Expression"
+										}
+									},
+									"SaveNewWatermark": {
+										"directory": {
+											"value": "@pipeline().parameters.directory",
+											"type": "Expression"
+										}
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"directory": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"old_watermark": {
+						"type": "String"
+					},
+					"new_watermark": {
+						"type": "String"
+					},
+					"files_to_copy": {
+						"type": "Array"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/yt_input_directory')]",
+				"[concat(variables('factoryId'), '/datasets/yt_watermark')]",
+				"[concat(variables('factoryId'), '/dataflows/Update_watermark')]",
+				"[concat(variables('factoryId'), '/datasets/yt_input_file')]",
+				"[concat(variables('factoryId'), '/datasets/yt_output_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/main_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "For_each_dataname",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.directories",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Run_copy_pipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "copy_data",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"directory": {
+												"value": "@item()",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"directories": {
+						"type": "array",
+						"defaultValue": [
+							"search",
+							"channels",
+							"videos"
+						]
+					}
+				},
+				"variables": {
+					"date": {
+						"type": "String"
+					},
+					"output_file_name": {
+						"type": "String"
+					},
+					"filename_array": {
+						"type": "Array"
+					},
+					"output_filename": {
+						"type": "String"
+					},
+					"current_item": {
+						"type": "String"
+					},
+					"dates": {
+						"type": "Array"
+					},
+					"temp": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/copy_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/new_blob_yt_data')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "main_pipeline",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"directories": "[parameters('new_blob_yt_data_properties_main_pipeline_parameters_directories')]"
+						}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/mol/blobs/yt-data",
+					"blobPathEndsWith": ".json",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('new_blob_yt_data_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/main_pipeline')]"
+			]
+		}
+	]
+}

@@ -1,0 +1,67 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Nazwa fabryki danych",
+			"defaultValue": "AzureDataSandboxADF"
+		},
+		"mol_yt_data_connectionString": {
+			"type": "secureString",
+			"metadata": "Bezpieczny ciąg dla elementu „connectionString” — „mol_yt_data”"
+		},
+		"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
+			"type": "array",
+			"defaultValue": [
+				"search",
+				"channels",
+				"videos"
+			]
+		},
+		"new_blob_yt_data_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/cb3c9618-9649-4894-ad33-6f2401835a41/resourceGroups/AzureDataSandbox/providers/Microsoft.Storage/storageAccounts/azuredatasandboxadls"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "Identyfikator URI konta magazynu zawierającego połączone szablony usługi ARM"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Token SAS dla konta magazynu zawierającego połączone szablony usługi ARM"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "AzureDataSandboxADF_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"mol_yt_data_connectionString": {
+						"value": "[parameters('mol_yt_data_connectionString')]"
+					},
+					"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
+						"value": "[parameters('new_blob_yt_data_properties_main_pipeline_parameters_directories')]"
+					},
+					"new_blob_yt_data_properties_typeProperties_scope": {
+						"value": "[parameters('new_blob_yt_data_properties_typeProperties_scope')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
