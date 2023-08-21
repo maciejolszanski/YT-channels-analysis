@@ -59,6 +59,15 @@
 			},
 			"output_filename": {
 				"type": "String"
+			},
+			"current_item": {
+				"type": "String"
+			},
+			"dates": {
+				"type": "Array"
+			},
+			"temp": {
+				"type": "String"
 			}
 		},
 		"annotations": []
