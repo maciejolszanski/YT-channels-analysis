@@ -20,11 +20,22 @@ In next step I will extract statistics of this channels, and finally statistics 
 Search results, channels and videos statistics will be then uploaded to Azure Blob Storage.
 
 
-## Initial Preparation
+
+
+## Initial Preparation 
 ### Setup Airflow on Docker
+>If you are using linux, you don't have to use Docker. Instead you can just create virtual environment and install airflow via pip.
+
 To setup airflow on Docker please follow these steps: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
 
-If you are using linux, you don't have to use docker. Instead you can just create virtual environment and install airflow via pip.
+TL;DR:
+
+```
+curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.7.0/docker-compose.yaml'
+mkdir -p ./dags ./logs ./plugins ./config
+docker compose up airflow-init
+docker compose up --build
+```
 
 ### Setup YouTube Data API KEY
 In order to use Youtube Data API you have to follow these steps: https://developers.google.com/youtube/v3/getting-started?hl=pl
@@ -35,6 +46,17 @@ In order to use Youtube Data API you have to follow these steps: https://develop
 ### Azure Data Factory
 
 ## Airflow DAG
+Airflow DAG should be created in `airflow-local/dags` directory which is mounted in the container (synchronized between computer and container).
+
+>You can find DAG created for this task here: [yt-data-DAG](airflow-local\dags\yt-api.py)
+
+DAG created for this project consists of 6 steps:
+![yt-dag-image](images\airflow_DAG.png)
+Steps get_search_data, get_channels_data and get_videos data are run sequentially becouse they depend on outputs of the previous one (To search channels data we have to fetch search data earlier).
+Steps uploading data to Azure Blob Storage are run in parallel - they upload data fetched by all the previous steps.
+
+This DAG is scheduled to run daily.
+
 ## Azure Data Factory Pipeline
 
 
