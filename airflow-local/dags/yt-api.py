@@ -16,6 +16,14 @@ CHANNELS_TO_SEARCH = 'data engineering'
 
 
 def _create_youtube_object():
+    """
+    Description:
+        This function creates and returns a youtube object,
+        that can be further used for sending API requests.
+
+    Output:
+        youtube  -> googleapiclient.disvocery -> Youtube object.
+    """
 
     api_service_name = "youtube"
     api_version = "v3"
@@ -28,7 +36,18 @@ def _create_youtube_object():
     return youtube
 
 def _extract_search_data():
-    
+    """
+    Description:
+        This function requests top 200 search results for 
+        phrase defined in global variable CHANNELS_TO_SEARCH. 
+        Results are saved locally as "search-data.json" file
+        as well as returned by this function.
+
+    Output:
+        search_results -> dict -> Youtube API response containig
+                                  data about top 200 search results.
+    """
+
     youtube = _create_youtube_object()
 
     # Search youtube channels with phrase defined as q param
@@ -47,6 +66,23 @@ def _extract_search_data():
 
 
 def _extract_channel_stats(task_instance):
+    """
+    Description:
+        This function retrieves channels ids from search results
+        and then fetches channel statistics for each channel 
+        in one request (Youtube Data API allows to specify 
+        multiple channels ids as a comma separated string).
+        Channel stats are saved locally as "channels-data.json" 
+        as well as returned by this function.
+
+    Input:
+        task_instance -> Airflow task -> Instance of a task that we want to
+                                         get returned data from. 
+
+    Output:
+        channels_data -> dict -> Youtube API response containig
+                                data about top channels.
+    """
 
     full_search_response = task_instance.xcom_pull(
         task_ids='get_search_data')
@@ -67,6 +103,18 @@ def _extract_channel_stats(task_instance):
     return channels_data
 
 def _get_video_ids(channels_data):
+    """
+    Description:
+        This function iterates over playlists_ids that stores videos
+        uploaded by channels and then appends all videos ids to 
+        one list.
+
+    Input:
+        channels_data -> dict -> Dict containig data about playlists with
+                                 uploaded videos.
+    Output:
+        videos_ids -> list -> List containig all videos ids.
+    """
 
     youtube = _create_youtube_object()
     playlist_ids = [channel_data['contentDetails']['relatedPlaylists']['uploads'] for channel_data in channels_data]
@@ -89,6 +137,24 @@ def _get_video_ids(channels_data):
     return videos_ids
 
 def _extract_videos_data(task_instance):
+    """
+    Description:
+        This function retrieves last 200 videos ids 
+        upload by each channel and then fetches videos statistics.
+        Request may contain max 500 video ids, so list containig
+        them is divided into 500 element slices.
+        Videos stats are saved locally as "videos-data.json" 
+        as well as returned by this function.
+
+    Input:
+        task_instance -> Airflow task -> Instance of a task that we want to
+                                         get returned data from. 
+
+    Output:
+        videos_data -> dict -> Youtube API response containig
+                               data about videos uploaded by channels.
+    """
+
 
     full_channels_data = task_instance.xcom_pull(task_ids='get_channels_data')
     channels_data = full_channels_data['items']
@@ -113,6 +179,7 @@ def _extract_videos_data(task_instance):
         )
         videos_data = request.execute()
 
+        # Joining following requests responses into one dict
         if i == 0: 
             output_videos_dict = videos_data
         else:
