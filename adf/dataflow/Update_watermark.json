@@ -1,0 +1,53 @@
+{
+	"name": "Update_watermark",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "yt_watermark",
+						"type": "DatasetReference"
+					},
+					"name": "LoadOldWatermark"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "yt_watermark",
+						"type": "DatasetReference"
+					},
+					"name": "SaveNewWatermark"
+				}
+			],
+			"transformations": [
+				{
+					"name": "UpdateWatermark"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     new_watermark as string",
+				"}",
+				"source(output(",
+				"          watermark as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'singleDocument') ~> LoadOldWatermark",
+				"LoadOldWatermark derive(watermark = $new_watermark) ~> UpdateWatermark",
+				"UpdateWatermark sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          watermark as string",
+				"     ),",
+				"     partitionFileNames:['watermark.json'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> SaveNewWatermark"
+			]
+		}
+	}
+}
