@@ -5,13 +5,21 @@
 			"referenceName": "mol_yt_data",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"directory": {
+				"type": "string"
+			}
+		},
 		"annotations": [],
 		"type": "Json",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
 				"fileName": "watermark.json",
-				"folderPath": "yt-data",
+				"folderPath": {
+					"value": "@concat('yt-data/', dataset().directory)",
+					"type": "Expression"
+				},
 				"container": "mol"
 			}
 		},
