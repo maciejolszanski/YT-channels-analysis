@@ -26,13 +26,7 @@
 		"schema": {
 			"type": "object",
 			"properties": {
-				"search_watermark": {
-					"type": "string"
-				},
-				"channels_watermark": {
-					"type": "string"
-				},
-				"videos_watermark": {
+				"watermark": {
 					"type": "string"
 				}
 			}
