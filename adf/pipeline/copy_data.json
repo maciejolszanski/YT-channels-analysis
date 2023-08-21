@@ -84,23 +84,6 @@
 									}
 								}
 							]
-						},
-						{
-							"name": "see current item",
-							"type": "SetVariable",
-							"dependsOn": [],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "current_item",
-								"value": {
-									"value": "@item()",
-									"type": "Expression"
-								}
-							}
 						}
 					]
 				}
@@ -245,19 +228,6 @@
 											"variableName": "files_to_copy",
 											"value": {
 												"value": "@item().name",
-												"type": "Expression"
-											}
-										}
-									},
-									{
-										"name": "Append Dates",
-										"type": "AppendVariable",
-										"dependsOn": [],
-										"userProperties": [],
-										"typeProperties": {
-											"variableName": "dates",
-											"value": {
-												"value": "@formatDateTime(join(take(skip(split(item().name, '-'), 3), 3), '-'), 'yyyy-MM-dd')",
 												"type": "Expression"
 											}
 										}
