@@ -1,0 +1,40 @@
+{
+	"name": "daily_midnight",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "main_pipeline",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"directories": [
+						"search",
+						"channels",
+						"videos"
+					]
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-08-23T00:00:00",
+				"endTime": "2023-09-30T13:21:00",
+				"timeZone": "Central European Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						0
+					]
+				}
+			}
+		}
+	}
+}
