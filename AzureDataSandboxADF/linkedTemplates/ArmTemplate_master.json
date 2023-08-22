@@ -4,12 +4,12 @@
 	"parameters": {
 		"factoryName": {
 			"type": "string",
-			"metadata": "Nazwa fabryki danych",
+			"metadata": "Data Factory name",
 			"defaultValue": "AzureDataSandboxADF"
 		},
 		"mol_yt_data_connectionString": {
 			"type": "secureString",
-			"metadata": "Bezpieczny ciąg dla elementu „connectionString” — „mol_yt_data”"
+			"metadata": "Secure string for 'connectionString' of 'mol_yt_data'"
 		},
 		"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
 			"type": "array",
@@ -25,11 +25,11 @@
 		},
 		"containerUri": {
 			"type": "string",
-			"metadata": "Identyfikator URI konta magazynu zawierającego połączone szablony usługi ARM"
+			"metadata": "URI to storage account containing linked ARM templates"
 		},
 		"containerSasToken": {
 			"type": "string",
-			"metadata": "Token SAS dla konta magazynu zawierającego połączone szablony usługi ARM"
+			"metadata": "Sas token to storage account containing linked ARM templates"
 		}
 	},
 	"variables": {
