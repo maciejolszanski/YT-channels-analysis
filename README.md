@@ -50,7 +50,7 @@ Airflow DAG should be created in `airflow-local/dags` directory which is mounted
 >You can find DAG created for this task here: [yt-data-DAG](airflow-local\dags\yt-api.py)
 
 DAG created for this project consists of 6 steps:
-![yt-dag-image](imagesairflow_DAG.png)
+![yt-dag-image](images/airflow_DAG.png)
 Steps get_search_data, get_channels_data and get_videos data are run sequentially becouse they depend on outputs of the previous one (To search channels data we have to fetch search data earlier).
 Steps uploading data to Azure Blob Storage are run in parallel - they upload data fetched by all the previous steps.
 
