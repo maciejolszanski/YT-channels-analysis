@@ -41,11 +41,10 @@ docker compose up --build
 In order to use Youtube Data API you have to follow these steps: https://developers.google.com/youtube/v3/getting-started?hl=pl
 
 
-## Azure Setup
-### Azure Storage Account
-### Azure Data Factory
+## Airflow
+### Airflow Vairbles and Connections
 
-## Airflow DAG
+### Airflow DAG
 Airflow DAG should be created in `airflow-local/dags` directory which is mounted in the container (synchronized between computer and container).
 
 >You can find DAG created for this task here: [yt-data-DAG](airflow-local\dags\yt-api.py)
@@ -58,5 +57,22 @@ Steps uploading data to Azure Blob Storage are run in parallel - they upload dat
 This DAG is scheduled to run daily.
 
 ## Azure Data Factory Pipeline
+### Linked Service and datasets
+### Pipelines
+
+## Databricks
+### Create secrets
+In order to read data from Azure Storage we have to create a secret containing access key. To manage secrets in Databricks you can use Databricks CLI: https://docs.databricks.com/en/dev-tools/cli/databricks-cli.html
+
+To setup secret type following commands: 
+```
+databricks secrets create-scope <scope-name>
+databricks secrets put-secret <scope-name> <secret-name> --string-value "<access-key-to-storage-account>"
+```
+
+To read secret in datbricks run:
+```
+dbutils.secrets.get(scope=<scope-key>, key=<secret-name>)
+```
 
 
