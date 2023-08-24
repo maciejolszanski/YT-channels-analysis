@@ -129,3 +129,7 @@ videos_df_dedup = videos_df.dropDuplicates()
 search_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/search.parquet")
 channels_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/channels.parquet")
 videos_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/videos.parquet")
+
+# COMMAND ----------
+
+
