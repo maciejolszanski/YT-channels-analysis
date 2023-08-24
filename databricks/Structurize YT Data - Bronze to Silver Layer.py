@@ -7,7 +7,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Loading data
+# MAGIC # Mounting container
 
 # COMMAND ----------
 
@@ -28,25 +28,27 @@ else:
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Reading data
+# MAGIC # Definig Functions
 
 # COMMAND ----------
 
 import pyspark.sql.functions as f
 import datetime
 
-
 def flatten_search_data(full_path, date):
 
     raw_df = spark.read.json(full_path, multiLine=True)
     search_flat = (raw_df
+                   # flatten dataframe
                    .withColumn('search_results', f.explode('items'))
                    .select(f.col("search_results.*"))
                    .select(f.col("snippet.*"))
                    .withColumn("thumbnailUrl", f.col("thumbnails.default.url"))
                    .drop("thumbnails", "title")
-                   .withColumn("date", f.lit(date))
-                   .repartition(4)
+                   # handle data types
+                   .withColumn("dateRead", f.to_date(f.lit(date), "yyyy-MM-dd"))
+                   .withColumn("publishTime", f.to_timestamp(f.col("publishTime")))
+                   .withColumn("publishedAt", f.to_timestamp(f.col("publishedAt")))
                 )
 
     return search_flat
@@ -55,11 +57,16 @@ def flatten_channels_data(full_path, date):
 
     raw_df = spark.read.json(full_path, multiLine=True)
     channels_flat = (raw_df
+                   # flatten dataframe
                    .withColumn('channels_results', f.explode('items'))
                    .select(f.col("channels_results.*"))
                    .withColumnRenamed("id", "channelId")
                    .select(f.col("channelId"), f.col("statistics.*"), f.col("topicDetails.*"), f.col("contentDetails.*"))
-                   .repartition(4)
+                   # handle data types
+                   .withColumn("dateRead", f.to_date(f.lit(date), "yyyy-MM-dd"))
+                   .withColumn("subscriberCount", f.col("subscriberCount").cast("int"))
+                   .withColumn("videoCount", f.col("videoCount").cast("int"))
+                   .withColumn("viewCount", f.col("viewCount").cast("int"))
                 )
 
     return channels_flat
@@ -68,85 +75,57 @@ def flatten_videos_data(full_path, date):
 
     raw_df = spark.read.json(full_path, multiLine=True)
     videos_flat = (raw_df
+                   # flatten dataframe
                    .withColumn('snippet', f.col("items").getField("snippet"))
                    .withColumn("snippet", f.explode("snippet"))
                    .select(f.col("snippet.*"))
                    .withColumn('description', f.col("localized").getField("description"))
                    .withColumn("thumbnailUrl", f.col("thumbnails.medium.url"))
                    .drop("items", "localized", "thumbnails")
-                   .repartition(4)
+                   # handle data types
+                   .withColumn("dateRead", f.lit(date))
+                   .withColumn("categoryId", f.col("categoryId").cast("int"))
+                   .withColumn("publishedAt", f.to_timestamp(f.col("publishedAt")))
                 )
 
     return videos_flat
 
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # Structurizing bronze data and writing to silver layer
+
+# COMMAND ----------
 
 files = dbutils.fs.ls("/mnt/mol-data/yt-analysis-data/bronze/")
 
+# Reading current silver tables
+search_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/search.parquet")
+channels_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/channels.parquet")
+videos_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/videos.parquet")
+
+# Reading each new bronze file and appending to silver table
 for file in files:
     full_path = file.path
     date = '-'.join(file.name.split('.')[0].split('-')[-3:])
     data_type = file.name.split('-')[0]
 
     if data_type == "search":
-        flatten_search_data(full_path, date)
+        read_search = flatten_search_data(full_path, date)
+        search_df = search_df.unionByName(read_search)
     elif data_type == "channels":
-        flatten_channels_data(full_path, date)
+        read_channels = flatten_channels_data(full_path, date)
+        channels_df = channels_df.unionByName(read_channels)
     elif data_type == "videos":
-        flatten_videos_data(full_path, date)
-    
-    
+        read_videos = flatten_videos_data(full_path, date)
+        videos_df = videos_df.unionByName(read_videos)
 
-# COMMAND ----------
+# Deduping updated silver tables
+search_df_dedup = search_df.dropDuplicates()
+channels_df_dedup = channels_df.dropDuplicates()
+videos_df_dedup = videos_df.dropDuplicates()
 
-# MAGIC %fs ls mnt/mol-data/yt-analysis-data/bronze
-
-# COMMAND ----------
-
-raw_df = spark.read.json("dbfs:/mnt/mol-data/yt-analysis-data/bronze/videos-data-engineering-2023-08-20.json", multiLine=True)
-display(raw_df.)
-
-# COMMAND ----------
-
-spark.conf.get("spark.executor.memory")
-
-
-# COMMAND ----------
-
-partitions = 8
-
-my_json = spark.read.json("dbfs:/mnt/mol-data/yt-analysis-data/bronze/videos-data-engineering-2023-08-20.json", multiLine=True)
-
-my_json.show()
-
-
-# COMMAND ----------
-
-full_path = "dbfs:/mnt/mol-data/yt-analysis-data/bronze/videos-data-engineering-2023-08-20.json"
-raw_df = spark.read.json(full_path, multiLine=True)
-videos_flat = (raw_df
-                .select("items")
-                .withColumn('snippet', f.col("items").getField("snippet"))
-                .drop("items")
-                .repartition(4)
-                .withColumn("snippet", f.explode("snippet"))
-                .select(f.col("snippet.*"))
-                .withColumn('description', f.col("localized").getField("description"))
-                .withColumn("thumbnailUrl", f.col("thumbnails.medium.url"))
-                .drop("localized", "thumbnails")
-            )
-
-videos_flat.rdd.getNumPartitions()
-
-# COMMAND ----------
-
-full_path = "dbfs:/mnt/mol-data/yt-analysis-data/bronze/channels-data-engineering-2023-08-20.json"
-
-raw_df = spark.read.json(full_path, multiLine=True)
-channels_flat = (raw_df
-                .withColumn('channels_results', f.explode('items'))
-                .select(f.col("channels_results.*"))
-                .withColumnRenamed("id", "channelId")
-                .select(f.col("channelId"), f.col("statistics.*"), f.col("topicDetails.*"), f.col("contentDetails.*"))
-                .repartition(4)
-            )
-channels_flat.rdd.getNumPartitions()
+# Overwrinting existing silver tables
+search_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/search.parquet")
+channels_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/channels.parquet")
+videos_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/videos.parquet")
