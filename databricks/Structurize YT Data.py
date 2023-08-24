@@ -11,21 +11,19 @@
 
 # COMMAND ----------
 
-conn_str = dbutils.secrets.get(scope="mol-secrets", key="storage_key")
+conn_key = dbutils.secrets.get(scope="mol-secrets", key="storage_key")
 storage_name = 'azuredatasandboxadls'
 container_name = "mol"
 
-# COMMAND ----------
+mountPoints = [elem.mountPoint for elem in dbutils.fs.mounts()]
 
-# MAGIC %md
-# MAGIC ### Mounting my container
-
-# COMMAND ----------
-
-dbutils.fs.mount(
-    source = f"wasbs://{container_name}@{storage_name}.blob.core.windows.net",
-    mount_point = "/mnt/mol-data",
-    extra_configs = {f"fs.azure.account.key.{storage_name}.blob.core.windows.net": conn_str})
+if '/mnt/mol-data' not in mountPoints:
+    dbutils.fs.mount(
+        source = f"wasbs://{container_name}@{storage_name}.blob.core.windows.net",
+        mount_point = "/mnt/mol-data",
+        extra_configs = {f"fs.azure.account.key.{storage_name}.blob.core.windows.net": conn_key})
+else:
+    print("Mount Point already created.")
 
 # COMMAND ----------
 
@@ -41,24 +39,45 @@ import datetime
 def flatten_search_data(full_path, date):
 
     raw_df = spark.read.json(full_path, multiLine=True)
-    search_results = raw_df.withColumn('search_results', f.explode('items')).select('search_results')
-    search_snippet = search_results.select(f.col("search_results.*")).select('snippet')
-    search_df = search_snippet.select(f.col("snippet.*"))
-    search_df_with_thumbnail = search_df.withColumn("thumbnailUrl", f.col("thumbnails.default.url")).drop("thumbnails", "title")
-    search_flat = search_df_with_thumbnail.withColumn("date", f.lit(date))
+    search_flat = (raw_df
+                   .withColumn('search_results', f.explode('items'))
+                   .select(f.col("search_results.*"))
+                   .select(f.col("snippet.*"))
+                   .withColumn("thumbnailUrl", f.col("thumbnails.default.url"))
+                   .drop("thumbnails", "title")
+                   .withColumn("date", f.lit(date))
+                   .repartition(4)
+                )
 
     return search_flat
 
 def flatten_channels_data(full_path, date):
 
     raw_df = spark.read.json(full_path, multiLine=True)
-    search_results = raw_df.withColumn('search_results', f.explode('items')).select('search_results')
-    search_snippet = search_results.select(f.col("search_results.*")).select('snippet')
-    search_df = search_snippet.select(f.col("snippet.*"))
-    search_df_with_thumbnail = search_df.withColumn("thumbnailUrl", f.col("thumbnails.default.url")).drop("thumbnails", "title")
-    search_flat = search_df_with_thumbnail.withColumn("date", f.lit(date))
+    channels_flat = (raw_df
+                   .withColumn('channels_results', f.explode('items'))
+                   .select(f.col("channels_results.*"))
+                   .withColumnRenamed("id", "channelId")
+                   .select(f.col("channelId"), f.col("statistics.*"), f.col("topicDetails.*"), f.col("contentDetails.*"))
+                   .repartition(4)
+                )
 
-    return search_flat
+    return channels_flat
+
+def flatten_videos_data(full_path, date):
+
+    raw_df = spark.read.json(full_path, multiLine=True)
+    videos_flat = (raw_df
+                   .withColumn('snippet', f.col("items").getField("snippet"))
+                   .withColumn("snippet", f.explode("snippet"))
+                   .select(f.col("snippet.*"))
+                   .withColumn('description', f.col("localized").getField("description"))
+                   .withColumn("thumbnailUrl", f.col("thumbnails.medium.url"))
+                   .drop("items", "localized", "thumbnails")
+                   .repartition(4)
+                )
+
+    return videos_flat
 
 
 files = dbutils.fs.ls("/mnt/mol-data/yt-analysis-data/bronze/")
@@ -71,22 +90,63 @@ for file in files:
     if data_type == "search":
         flatten_search_data(full_path, date)
     elif data_type == "channels":
-        pass
+        flatten_channels_data(full_path, date)
     elif data_type == "videos":
-        pass
+        flatten_videos_data(full_path, date)
     
     
 
 # COMMAND ----------
 
-name = search_data.withColumn('name', f.explode('items')).select('name')
+# MAGIC %fs ls mnt/mol-data/yt-analysis-data/bronze
 
 # COMMAND ----------
 
-search_data.show()
+raw_df = spark.read.json("dbfs:/mnt/mol-data/yt-analysis-data/bronze/videos-data-engineering-2023-08-20.json", multiLine=True)
+display(raw_df.)
 
 # COMMAND ----------
 
-search_df1 = name.select(f.col("name.*"))
-search_df2 = search_df1.select(f.col("etag"), f.col("id.*"), f.col("snippet.*"))
-display(search_df2)
+spark.conf.get("spark.executor.memory")
+
+
+# COMMAND ----------
+
+partitions = 8
+
+my_json = spark.read.json("dbfs:/mnt/mol-data/yt-analysis-data/bronze/videos-data-engineering-2023-08-20.json", multiLine=True)
+
+my_json.show()
+
+
+# COMMAND ----------
+
+full_path = "dbfs:/mnt/mol-data/yt-analysis-data/bronze/videos-data-engineering-2023-08-20.json"
+raw_df = spark.read.json(full_path, multiLine=True)
+videos_flat = (raw_df
+                .select("items")
+                .withColumn('snippet', f.col("items").getField("snippet"))
+                .drop("items")
+                .repartition(4)
+                .withColumn("snippet", f.explode("snippet"))
+                .select(f.col("snippet.*"))
+                .withColumn('description', f.col("localized").getField("description"))
+                .withColumn("thumbnailUrl", f.col("thumbnails.medium.url"))
+                .drop("localized", "thumbnails")
+            )
+
+videos_flat.rdd.getNumPartitions()
+
+# COMMAND ----------
+
+full_path = "dbfs:/mnt/mol-data/yt-analysis-data/bronze/channels-data-engineering-2023-08-20.json"
+
+raw_df = spark.read.json(full_path, multiLine=True)
+channels_flat = (raw_df
+                .withColumn('channels_results', f.explode('items'))
+                .select(f.col("channels_results.*"))
+                .withColumnRenamed("id", "channelId")
+                .select(f.col("channelId"), f.col("statistics.*"), f.col("topicDetails.*"), f.col("contentDetails.*"))
+                .repartition(4)
+            )
+channels_flat.rdd.getNumPartitions()
