@@ -11,7 +11,7 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'mol_yt_data'"
 		},
-		"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
+		"daily_midnight_properties_main_pipeline_parameters_directories": {
 			"type": "array",
 			"defaultValue": [
 				"search",
@@ -53,11 +53,11 @@
 					"mol_yt_data_connectionString": {
 						"value": "[parameters('mol_yt_data_connectionString')]"
 					},
-					"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
-						"value": "[parameters('new_blob_yt_data_properties_main_pipeline_parameters_directories')]"
-					},
 					"new_blob_yt_data_properties_typeProperties_scope": {
 						"value": "[parameters('new_blob_yt_data_properties_typeProperties_scope')]"
+					},
+					"daily_midnight_properties_main_pipeline_parameters_directories": {
+						"value": "[parameters('daily_midnight_properties_main_pipeline_parameters_directories')]"
 					}
 				}
 			},

@@ -8,7 +8,7 @@
 		"mol_yt_data_connectionString": {
 			"value": ""
 		},
-		"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
+		"daily_midnight_properties_main_pipeline_parameters_directories": {
 			"value": [
 				"search",
 				"channels",

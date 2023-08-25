@@ -11,7 +11,7 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'mol_yt_data'"
 		},
-		"new_blob_yt_data_properties_main_pipeline_parameters_directories": {
+		"daily_midnight_properties_main_pipeline_parameters_directories": {
 			"type": "array",
 			"defaultValue": [
 				"search",
@@ -938,12 +938,12 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/new_blob_yt_data')]",
+			"name": "[concat(parameters('factoryName'), '/daily_midnight')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -951,10 +951,34 @@
 							"type": "PipelineReference"
 						},
 						"parameters": {
-							"directories": "[parameters('new_blob_yt_data_properties_main_pipeline_parameters_directories')]"
+							"directories": "[parameters('daily_midnight_properties_main_pipeline_parameters_directories')]"
 						}
 					}
 				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2023-08-23T00:00:00",
+						"endTime": "2023-09-30T13:21:00",
+						"timeZone": "Central European Standard Time",
+						"schedule": {}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/main_pipeline')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/new_blob_yt_data')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [],
 				"type": "BlobEventsTrigger",
 				"typeProperties": {
 					"blobPathBeginsWith": "/mol/blobs/yt-data",
@@ -966,9 +990,7 @@
 					]
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/main_pipeline')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/AutoResolveIntegrationRuntime')]",
