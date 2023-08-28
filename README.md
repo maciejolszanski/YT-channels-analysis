@@ -47,18 +47,29 @@ In order to use Youtube Data API you have to follow these steps: https://develop
 ### Airflow DAG
 Airflow DAG should be created in `airflow-local/dags` directory which is mounted in the container (synchronized between computer and container).
 
->You can find DAG created for this task here: [yt-data-DAG](airflow-local\dags\yt-api.py)
+>You can find DAG created for this task here: [yt-data-DAG](airflow-local/dags/yt-api.py)
 
 DAG created for this project consists of 6 steps:
 ![yt-dag-image](images/airflow_DAG.png)
+
 Steps get_search_data, get_channels_data and get_videos data are run sequentially becouse they depend on outputs of the previous one (To search channels data we have to fetch search data earlier).
 Steps uploading data to Azure Blob Storage are run in parallel - they upload data fetched by all the previous steps.
 
 This DAG is scheduled to run daily.
 
 ## Azure Data Factory Pipeline
-### Linked Service and datasets
+### Linked Service and Datasets
+We need two Linked Services. One of Storage type and one of Compute type.
+
+Storage type Linked Service should point to Storage Account. I chose authentication via Account Key, but you can choose any type you want.
+
+Compute type Linked Service should point to Databricks Workspace. I chose authentication via Access token. You can generate it in you Databricks workspace as described here:
+https://docs.databricks.com/en/dev-tools/auth.html#databricks-personal-access-tokens-for-workspace-users.
+You can also choose any other type of authentication.
+
 ### Pipelines
+
+### Data Flow
 
 ## Databricks
 ### Create secrets
