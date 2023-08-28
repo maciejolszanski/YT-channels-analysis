@@ -9,6 +9,9 @@
 
 # COMMAND ----------
 
+import pyspark.sql.functions as f
+from pyspark.sql.window import Window
+
 search_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/search.parquet")
 channels_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/channels.parquet")
 videos_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/videos.parquet")
@@ -21,9 +24,6 @@ videos_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/videos.par
 # MAGIC Factors that are important to identify such channels are subscribers_count and view_count. It will be also good to see the average views on a video.
 
 # COMMAND ----------
-
-import pyspark.sql.functions as f
-from pyspark.sql.window import Window
 
 w = Window.partitionBy('channelId').orderBy(f.desc('dateRead'))
 
@@ -89,8 +89,7 @@ growing_channels.write.mode("overwrite").csv("/mnt/mol-data/yt-analysis-data/gol
 
 # COMMAND ----------
 
-
-c = (videos_df
+df_dates = (videos_df
             .withColumn("yearPublished", f.year("publishedAt"))
             .withColumn("monthPublished", f.month("publishedAt"))
             .withColumn("weekPublished", f.weekofyear("publishedAt"))
