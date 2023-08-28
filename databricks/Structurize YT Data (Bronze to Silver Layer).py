@@ -129,12 +129,3 @@ videos_df_dedup = videos_df.dropDuplicates()
 search_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/search.parquet")
 channels_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/channels.parquet")
 videos_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/videos.parquet")
-
-# COMMAND ----------
-
-flatten_search_data("dbfs:/mnt/mol-data/yt-analysis-data/bronze/search-data-engineering-2023-08-20.json", "2023-08-20").show()
-
-# COMMAND ----------
-
-videos_df = spark.read.parquet("/mnt/mol-data/yt-analysis-data/silver/videos.parquet")
-videos_df.printSchema()
