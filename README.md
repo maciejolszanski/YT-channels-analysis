@@ -19,8 +19,15 @@ In next step I will extract statistics of this channels, and finally statistics 
 
 Search results, channels and videos statistics will be then uploaded to Azure Blob Storage.
 
+Nex step will be copying the data from landing place to Bronze layer directory in the same Storage Account. This will be performed by Azure Data Factory Pipeline. The data copying will be executed incrementally with separate watermarks for search, channels and videos data.
 
+Processing data and structurizing them will be performed by Databricks notebook. Such data will be saved in Silver layer directory.
 
+Aggregating data will be also performed by Databricks notebook. Such data will be saved in Gold layer directory.
+
+Both Databricks notebook will be executed by Azure Data Factory pipeline after copying data to Bronze Layer Directory.
+
+More technical Details will be covered in dedicated sections of this Readme file.
 
 ## Initial Preparation 
 ### Setup Airflow on Docker
