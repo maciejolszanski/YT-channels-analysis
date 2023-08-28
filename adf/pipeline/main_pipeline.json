@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "For_each_dataname",
+				"name": "Copy data",
 				"type": "ForEach",
 				"dependsOn": [],
 				"userProperties": [],
@@ -35,6 +35,26 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Notebook1",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "Copy data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": []
 			}
 		],
 		"parameters": {
