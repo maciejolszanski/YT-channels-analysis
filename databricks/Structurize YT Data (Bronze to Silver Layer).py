@@ -41,8 +41,7 @@ def flatten_search_data(full_path, date):
     search_flat = (raw_df
                    # flatten dataframe
                    .withColumn('search_results', f.explode('items'))
-                   .select(f.col("search_results.*"))
-                   .select(f.col("snippet.*"))
+                   .select(f.col("search_results.*"), f.col("snippet.*"))
                    .withColumn("thumbnailUrl", f.col("thumbnails.default.url"))
                    .drop("thumbnails", "title")
                    # handle data types
@@ -78,7 +77,9 @@ def flatten_videos_data(full_path, date):
                    # flatten dataframe
                    .withColumn('snippet', f.col("items").getField("snippet"))
                    .withColumn("snippet", f.explode("snippet"))
-                   .select(f.col("snippet.*"))
+                   .withColumn('statistics', f.col("items").getField("statistics"))
+                   .withColumn("statistics", f.explode("statistics"))
+                   .select(f.col("snippet.*"), f.col("statistics.*"))
                    .withColumn('description', f.col("localized").getField("description"))
                    .withColumn("thumbnailUrl", f.col("thumbnails.medium.url"))
                    .drop("items", "localized", "thumbnails")
@@ -129,7 +130,3 @@ videos_df_dedup = videos_df.dropDuplicates()
 search_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/search.parquet")
 channels_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/channels.parquet")
 videos_df_dedup.write.mode("overwrite").parquet("/mnt/mol-data/yt-analysis-data/silver/videos.parquet")
-
-# COMMAND ----------
-
-
