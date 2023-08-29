@@ -119,7 +119,9 @@ Let's create following datasets:
 
 ### Pipelines
 #### Main Pipeline
-Main pipeline has one parameter - directories. Its 
+Main pipeline has one parameter - `directories` of type Array with default value - `["search","channels","videos"]`.
+
+![main-pipeline-image]()
 
 ### Data Flow
 
