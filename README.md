@@ -47,6 +47,29 @@ docker compose up --build
 ### Setup YouTube Data API KEY
 In order to use Youtube Data API you have to follow these steps: https://developers.google.com/youtube/v3/getting-started?hl=pl
 
+## Azure Storage Account
+In my Storage Account i have container named `mol`. Inside this container I've created two directories `yt-data` which is a landing directory for raw data, and `yt-analysis-data` which is directory for Bronze-Silver-Gold layers.
+
+Directory tree in my container is as follows:
+```
+├── yt-data
+  ├── search
+    └── watermark.json
+  ├── channels
+    └── watermark.json
+  └── videos
+    └── watermark.json
+└── yt-analysis-data
+  ├── bronze
+  ├── silver
+  └── gold
+```
+
+As you can see in directories `search`, `channels` and `videos` there is also a file `watermark.json` added. Initially it should be:
+```
+{"watermark":"1970-01-01"}
+```
+Later the watermarks date will be overwritten by ADF pipeline.
 
 ## Airflow
 ### Airflow Vairbles and Connections
@@ -65,7 +88,7 @@ Steps uploading data to Azure Blob Storage are run in parallel - they upload dat
 This DAG is scheduled to run daily.
 
 ## Azure Data Factory Pipeline
-### Linked Service and Datasets
+### Linked Service
 We need two Linked Services. One of Storage type and one of Compute type.
 
 Storage type Linked Service should point to Storage Account. I chose authentication via Account Key, but you can choose any type you want.
@@ -74,7 +97,25 @@ Compute type Linked Service should point to Databricks Workspace. I chose authen
 https://docs.databricks.com/en/dev-tools/auth.html#databricks-personal-access-tokens-for-workspace-users.
 You can also choose any other type of authentication.
 
+### Datasets
+In the landing directory we have three separate directories (for search data, channels data and videos data).
+We don't have to create three separate datasets in ADF, we can create one and parametrize them.
+>Actually we have to create two datasets - one for directories (used to list all files) and one for files inside them (used to copy specific file)
+
+Let's create following datasets:
+* yt_input_directory
+  * parameters: directory (string)
+* yt_input_file
+  * parameters: directory (string), filename (string)
+* yt_watermak
+  * parameters: directory (string)
+* yt_output_data
+  * parameters: filename (string)
+
+
 ### Pipelines
+#### Main Pipeline
+Main pipeline has one parameter - directories. Its 
 
 ### Data Flow
 
