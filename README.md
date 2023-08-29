@@ -104,13 +104,17 @@ We don't have to create three separate datasets in ADF, we can create one and pa
 
 Let's create following datasets:
 * yt_input_directory
-  * parameters: directory (string)
+  * Parameters: directory (string)
+  * File path: `<container_name>` / `@concat('yt-data/', dataset().directory)` / ` `
 * yt_input_file
   * parameters: directory (string), filename (string)
+  * File path: `<container_name>` / `@concat('yt-data/', dataset().directory)` / `@dataset().filename `
 * yt_watermak
   * parameters: directory (string)
+  * File path: `<container_name>` / `@concat('yt-data/', dataset().directory)` / `watermark.json `
 * yt_output_data
   * parameters: filename (string)
+  * File path: `<container_name>` / `yt-analysis-data/bronze` / `@dataset().filename`
 
 
 ### Pipelines
