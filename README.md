@@ -123,6 +123,34 @@ Main pipeline has one parameter - `directories` of type Array with default value
 
 ![main-pipeline-image]()
 
+First action of the main pipeline is iterating over elements of `directories` param and running copy_data pipeline for search, channels and videos data. This pipeline is described in details in text section.
+
+After copying data there are executed Databricks notebooks. First is notebook responsible for flattening bronze data, dedeuping them, casting correct column types and saving to silver layer directory. Second notebook is responsible for calculating aggregates and saving them in gold layer directory. Databricks notebooks are described in details in "Databricks" section.
+
+#### Copy Data Pipeline
+Copy Data pipeline has one parameter and three variables.
+
+Parameters:
+  * directory (String) - no default value
+
+Variables:
+  * old_watermark (String) - no default value
+  * new_watermark (String) - no default value
+  * files_to_copy (Array) - no default value
+
+![copy-data-pipeline-image]()
+
+Activities:
+  * **Lookup Old Watermark** - Reads the value of current watermark in specific directory ("search", "channels", "videos")
+    * As Source dataset uses `yt_watermark` and passes value of pipeline directory param into dataset directory param.
+  *  **Set Old Watermark** - assigns the value read by `Lookup Old Watermark` to variable `old_watermark`
+    * Value is `@activity('Lookup Old Watermark').output.firstRow.watermark`
+  *  **Init New Watermark** - initializes variable `new_watermark` with the value read by `Lookup Old Watermark`
+    * Value is `@activity('Lookup Old Watermark').output.firstRow.watermark`
+  *  **Get Input FileNames** - gets the names of every file in directory.
+    * As Source dataset uses `yt_input_directory` and passes value of pipeline directory param into dataset directory param.
+    * Field list param is set to "Child items"
+
 ### Data Flow
 
 ## Databricks
