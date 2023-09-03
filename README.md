@@ -254,4 +254,8 @@ Second one is "Growing Channels". It calculates daily viewCount considering only
 
 Another two aggregates are "Monthly uploads" and "Weekly uploads". There are added columns related to year, month and week of vidoes publishing, then data are grouped by this columns and the count of videos in these periods is calulcated.
 
+Output dataframes are saved as parquets into Gold Layer directory. There are also converted to Delta Tables and stored in database in the Gold Layer directory. Thanks to that I can create dashboard using SQL in Databricks. That is described in the next section.
+
 >You can find this notebook here: [silver-to-gold-notebook](databricks/Aggregates%20(Silver%20to%20Gold%20Layer).py)
+
+### Dashboard
