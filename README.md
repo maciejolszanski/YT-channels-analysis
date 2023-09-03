@@ -121,7 +121,7 @@ Let's create following datasets:
 #### Main Pipeline
 Main pipeline has one parameter - `directories` of type Array with default value - `["search","channels","videos"]`.
 
-![main-pipeline-image]()
+![main-pipeline-image](images/main_pipeline.png)
 
 First action of the main pipeline is iterating over elements of `directories` param and running copy_data pipeline for search, channels and videos data. This pipeline is described in details in text section.
 
@@ -138,20 +138,69 @@ Variables:
   * new_watermark (String) - no default value
   * files_to_copy (Array) - no default value
 
-![copy-data-pipeline-image]()
+![copy-data-pipeline-image](images/copy_data_pipeline.png)
 
 Activities:
-  * **Lookup Old Watermark** - Reads the value of current watermark in specific directory ("search", "channels", "videos")
+  * **Lookup Old Watermark** - Reads the value of current watermark in specific directory ("search", "channels", "videos").
     * As Source dataset uses `yt_watermark` and passes value of pipeline directory param into dataset directory param.
   *  **Set Old Watermark** - assigns the value read by `Lookup Old Watermark` to variable `old_watermark`
-    * Value is `@activity('Lookup Old Watermark').output.firstRow.watermark`
+     *  Value is `@activity('Lookup Old Watermark').output.firstRow.watermark`
   *  **Init New Watermark** - initializes variable `new_watermark` with the value read by `Lookup Old Watermark`
-    * Value is `@activity('Lookup Old Watermark').output.firstRow.watermark`
+     *  Value is `@activity('Lookup Old Watermark').output.firstRow.watermark`
   *  **Get Input FileNames** - gets the names of every file in directory.
-    * As Source dataset uses `yt_input_directory` and passes value of pipeline directory param into dataset directory param.
-    * Field list param is set to "Child items"
+     *  As Source dataset uses `yt_input_directory` and passes value of pipeline directory param into dataset directory param.
+      * Field list param is set to "Child items"
+ * **Get Filenames To Copy** - For each value returned by `Get Input FileNames`:
+![get_filenames_to_copy](images/GetFilenamesToCopy.png)
+   * **If Later than Old Watermark** - appends files that are older that watermark value and that are not watermark itself to variable `files_to_copy`. Appended value is ``
+   *  **If Later Than New Watermark** - Sets a value of `new_watermark`. Set value is
+```
+# If Later than Old Watermark condition:
+
+@if(
+  greater(length(split(item().name, '-')), 2),
+    greater(
+      ticks(formatDateTime(
+        join(take(skip(split(item().name, '-'), 3), 3), '-'), 'yyyy-MM-dd')), 
+      ticks(formatDateTime(variables('old_watermark'), 'yyyy-MM-dd'))),
+  bool(0)
+)
+
+# If Later than Old Watermark appended value:
+
+@item().name
+```
+```
+If Later Than New Watermark condition:
+
+@if(
+  greater(length(split(item().name, '-')), 2),
+  greater(
+    ticks(formatDateTime(
+      join(take(skip(split(item().name, '-'), 3), 3), '-'), 'yyyy-MM-dd')),
+    ticks(formatDateTime(variables('new_watermark'), 'yyyy-MM-dd'))),
+bool(0)
+)
+
+If Later Than New Watermark set value:
+
+@formatDateTime(join(take(skip(split(item().name, '-'), 3), 3), '-'), 'yyyy-MM-dd')
+```
+  
+* **Copy Files** - iterates over variable `files_to_copy` and copies file to Bronze Layer directory.
+  * As source dataset uses `yt_input_file` with params:
+    * directory = `@pipeline().parameters.directory`
+    * filename = `@item()`
+  * As sink dataset uses `yt_output_data` with param:
+    * `filename` = `@concat(join(take(split(item(), '-'), 6), '-'),'.json')`
+
+* **Update watermark** - Runs dataflow `Update_watermark` that updates `watermark.json` file in current directory. It is described in details in next section.
 
 ### Data Flow
+#### Update watermark dataflow
+This data flow updates `watermark.json` file with new value of watermark.
+
+![data-flow-image](images/data_flow.png)
 
 ## Databricks
 ### Create secrets
