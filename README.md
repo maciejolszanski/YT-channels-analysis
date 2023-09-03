@@ -259,3 +259,8 @@ Output dataframes are saved as parquets into Gold Layer directory. There are als
 >You can find this notebook here: [silver-to-gold-notebook](databricks/Aggregates%20(Silver%20to%20Gold%20Layer).py)
 
 ### Dashboard
+
+Using SQL Warehous in Databricks I created a Dashboard to visualize the outcome of my analysis.
+
+![dash_1](images/dash_part_1.png)
+![dash_2](images/dash_part_2.png)
