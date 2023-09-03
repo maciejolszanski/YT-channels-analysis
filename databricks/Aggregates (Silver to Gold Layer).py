@@ -112,3 +112,21 @@ uploads_week = (df_dates
 uploads_month.write.mode("overwrite").csv("/mnt/mol-data/yt-analysis-data/gold/uploads_month.parquet")
 uploads_week.write.mode("overwrite").csv("/mnt/mol-data/yt-analysis-data/gold/uploads_week.parquet")
 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC # Create tables
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE DATABASE IF NOT EXISTS aggregates
+# MAGIC LOCATION '/mnt/mol-data/yt-analysis-data/gold/database'
+
+# COMMAND ----------
+
+pop_channels.write.mode("overwrite").saveAsTable("aggregates.pop_channels")
+growing_channels.write.mode("overwrite").saveAsTable("aggregates.growing_channels")
+uploads_month.write.mode("overwrite").saveAsTable("aggregates.uploads_month")
+uploads_week.write.mode("overwrite").saveAsTable("aggregates.uploads_week")
