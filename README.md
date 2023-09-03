@@ -223,7 +223,7 @@ Steps:
 There is a schedule type trigger created that runs everyday at midnight.
 
 ## Databricks
-### Create secrets
+### Secrets
 In order to read data from Azure Storage we have to create a secret containing access key. To manage secrets in Databricks you can use Databricks CLI: https://docs.databricks.com/en/dev-tools/cli/databricks-cli.html
 
 To setup secret type following commands: 
@@ -237,4 +237,21 @@ To read secret in datbricks run:
 dbutils.secrets.get(scope=<scope-key>, key=<secret-name>)
 ```
 
+### Notebooks
+#### Bronze to Silver
+This notebook's purpose is mainly to flatten JSONs files into tables. It also deduplicates tables and casts correct column datatypes.
 
+Such preprocessed data are then saves as .parquets into Silver Layer directory in Storage Account.
+
+>You can find this notebook here: [bronze-to-silver-notebook](databricks/Structurize%20YT%20Data%20(Bronze%20to%20Silver%20Layer).py)
+
+#### Silver to Gold
+In this notebook there are calulated aggregates. 
+
+First of them is "Most popular channels". It joins channels_df with search_df, then chooses only most recently acquired data and creates column "viewCountPerVideo".
+
+Second one is "Growing Channels". It calculates daily viewCount considering only two most recents data acquisition dates. Data are also sorted by daily views.
+
+Another two aggregates are "Monthly uploads" and "Weekly uploads". There are added columns related to year, month and week of vidoes publishing, then data are grouped by this columns and the count of videos in these periods is calulcated.
+
+>You can find this notebook here: [silver-to-gold-notebook](databricks/Aggregates%20(Silver%20to%20Gold%20Layer).py)
