@@ -73,6 +73,11 @@ Later the watermarks date will be overwritten by ADF pipeline.
 
 ## Airflow
 ### Airflow Vairbles and Connections
+In order to connect with Youtube Data API and with Azure Blob Storage you have to store your credentials in Airflow. They should be kept as secret.
+
+Youtube Data API key is stored as a variable. It can be created in Airflow UI in `Admin >> Variables` section. I named this variable `YT_KEY`.
+
+Storage Account credentials are stored as a connection in Airflow. Connection can be created in Airflow UI in `Admin >> Connections` section. You have to choose one of many authentication methods. I used Blob Storage Connection String. I named my connection `azure-sa`.
 
 ### Airflow DAG
 Airflow DAG should be created in `airflow-local/dags` directory which is mounted in the container (synchronized between computer and container).
@@ -149,7 +154,7 @@ Activities:
      *  Value is `@activity('Lookup Old Watermark').output.firstRow.watermark`
   *  **Get Input FileNames** - gets the names of every file in directory.
      *  As Source dataset uses `yt_input_directory` and passes value of pipeline directory param into dataset directory param.
-      * Field list param is set to "Child items"
+     *  Field list param is set to "Child items"
  * **Get Filenames To Copy** - For each value returned by `Get Input FileNames`:
 ![get_filenames_to_copy](images/GetFilenamesToCopy.png)
    * **If Later than Old Watermark** - appends files that are older that watermark value and that are not watermark itself to variable `files_to_copy`. Appended value is ``
@@ -198,9 +203,24 @@ If Later Than New Watermark set value:
 
 ### Data Flow
 #### Update watermark dataflow
-This data flow updates `watermark.json` file with new value of watermark.
+This data flow updates `watermark.json` file with new value of watermark. 
+
+This Data flow has one parameter:
+* new_watermark (String) - no default value
 
 ![data-flow-image](images/data_flow.png)
+
+Steps:
+* **LoadOldWatermark** - Source - Loads watermark file.
+  * Source dataset = `yt_watermark`
+* **Update Watermark** - Derived Column - Changes value of watermark.
+  * Set value = `$new_watermark`
+* **SaveNewWatermark** - Sink - Saves new watermark to file.
+  * Sink dataset = `yt_watermark`
+
+
+### Trigger
+There is a schedule type trigger created that runs everyday at midnight.
 
 ## Databricks
 ### Create secrets
