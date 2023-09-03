@@ -1,16 +1,16 @@
 # Youtube channels analysis
 
 ## Description
-This project's goal is to analyze statistics of the most popular channels about Data Engineering and find a pattern that led their creators to success.
+This project's goal is to find out what are the most popular channels about Data Engineering and to visualise their statistics.
 
 ### What do you need to run this project
-- Docker (only if using Windows)
-- Google Account
-- Airflow
-- Azure Subscription:
-  - Azure Storage Account
-  - Azure Data Factory
-  - Databricks
+* Docker (only if using Windows)
+* Google Account (Youtube Data Api)
+* Airflow
+* Azure Subscription:
+  * Azure Storage Account
+  * Azure Data Factory
+  * Databricks
 
 ### Design
 
@@ -87,14 +87,14 @@ Airflow DAG should be created in `airflow-local/dags` directory which is mounted
 DAG created for this project consists of 6 steps:
 ![yt-dag-image](images/airflow_DAG.png)
 
-Steps get_search_data, get_channels_data and get_videos data are run sequentially becouse they depend on outputs of the previous one (To search channels data we have to fetch search data earlier).
+Steps get_search_data, get_channels_data and get_videos data are run sequentially becouse they depend on outputs of the previous one (To search channels data I have to fetch search data earlier).
 Steps uploading data to Azure Blob Storage are run in parallel - they upload data fetched by all the previous steps.
 
 This DAG is scheduled to run daily.
 
 ## Azure Data Factory Pipeline
 ### Linked Service
-We need two Linked Services. One of Storage type and one of Compute type.
+I need two Linked Services. One of Storage type and one of Compute type.
 
 Storage type Linked Service should point to Storage Account. I chose authentication via Account Key, but you can choose any type you want.
 
@@ -103,9 +103,9 @@ https://docs.databricks.com/en/dev-tools/auth.html#databricks-personal-access-to
 You can also choose any other type of authentication.
 
 ### Datasets
-In the landing directory we have three separate directories (for search data, channels data and videos data).
-We don't have to create three separate datasets in ADF, we can create one and parametrize them.
->Actually we have to create two datasets - one for directories (used to list all files) and one for files inside them (used to copy specific file)
+In the landing directory I have three separate directories (for search data, channels data and videos data).
+I don't have to create three separate datasets in ADF, I can create one and parametrize them.
+>Actually I have to create two datasets - one for directories (used to list all files) and one for files inside them (used to copy specific file)
 
 Let's create following datasets:
 * yt_input_directory
@@ -224,7 +224,7 @@ There is a schedule type trigger created that runs everyday at midnight.
 
 ## Databricks
 ### Secrets
-In order to read data from Azure Storage we have to create a secret containing access key. To manage secrets in Databricks you can use Databricks CLI: https://docs.databricks.com/en/dev-tools/cli/databricks-cli.html
+In order to read data from Azure Storage I have to create a secret containing access key. To manage secrets in Databricks you can use Databricks CLI: https://docs.databricks.com/en/dev-tools/cli/databricks-cli.html
 
 To setup secret type following commands: 
 ```
