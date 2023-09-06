@@ -1,13 +1,5 @@
 # Youtube channels analysis
 
-1. [Description](##Description)
-2. [Initial Preparation](##Initial-Preparation)
-3. [Azure Storage Account](##Azure-Storage-Account)
-4. [Airflow](##Airflow)
-5. [Azure Data Factory](##Azure-Data-Factory)
-6. [Databricks](##Databricks)
-
-
 ## Description
 This project's goal is to find out what are the most popular channels about Data Engineering and to visualise their statistics.
 
