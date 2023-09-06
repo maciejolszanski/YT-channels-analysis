@@ -1,12 +1,11 @@
 # Youtube channels analysis
 
-Table of contents
-1. [Description](##description)
-2. [Initial Preparation](##initial-preparation)
-3. [Azure Storage Account](##azure-storage-account)
-4. [Airflow](##airflow)
-5. [Azure Data Factory](##azure-data-factory)
-6. [Databricks](##databricks)
+1. [Description](##Description)
+2. [Initial Preparation](##Initial-Preparation)
+3. [Azure Storage Account](##Azure-Storage-Account)
+4. [Airflow](##Airflow)
+5. [Azure Data Factory](##Azure-Data-Factory)
+6. [Databricks](##Databricks)
 
 
 ## Description
