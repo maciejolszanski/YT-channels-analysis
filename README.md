@@ -1,5 +1,14 @@
 # Youtube channels analysis
 
+Table of contents
+1. [Description](##description)
+2. [Initial Preparation](##initial-preparation)
+3. [Azure Storage Account](##azure-storage-account)
+4. [Airflow](##airflow)
+5. [Azure Data Factory](##azure-data-factory)
+6. [Databricks](##databricks)
+
+
 ## Description
 This project's goal is to find out what are the most popular channels about Data Engineering and to visualise their statistics.
 
@@ -72,7 +81,7 @@ As you can see in directories `search`, `channels` and `videos` there is also a 
 Later the watermarks date will be overwritten by ADF pipeline.
 
 ## Airflow
-### Airflow Vairbles and Connections
+### Airflow Variables and Connections
 In order to connect with Youtube Data API and with Azure Blob Storage you have to store your credentials in Airflow. They should be kept as secret.
 
 Youtube Data API key is stored as a variable. It can be created in Airflow UI in `Admin >> Variables` section. I named this variable `YT_KEY`.
@@ -92,7 +101,7 @@ Steps uploading data to Azure Blob Storage are run in parallel - they upload dat
 
 This DAG is scheduled to run daily.
 
-## Azure Data Factory Pipeline
+## Azure Data Factory
 ### Linked Service
 I need two Linked Services. One of Storage type and one of Compute type.
 
